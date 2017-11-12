@@ -22,7 +22,7 @@ Variable address | The address of a stored variable, referenced by its name pref
 Complex expression | A series of expressions, surrounded by parentheses, and with various prefix unary operators and infix binary or ternary operators | N/A | `($x + 1)`, `(12 / $y + $offset)`
 Array expression | A series of expressions inside square brackets. | N/A | `[1 2 7 test $foo -3.5]`, `[&x &y &z]`
 Directive expression | A directive; see section 1.2. | N/A | `@sqrt $x`, `@log ($x + 5)`
-Lambda expression | A series of directives inside curly braces. Note: no directives or expressions contained inside a lambda expression are evaluated until the lambda is evaluated; see section 3.1. | N/A | `{ @print $element }`
+Lambda expression | A series of directives inside curly braces. Note: no directives or expressions contained inside a lambda expression are evaluated until the lambda is evaluated; see section 2.7. | N/A | `{ @print $element }`
 
 Complex expressions can any of the following unary (prefix) operators:
 
@@ -96,7 +96,7 @@ This is the most essential directive: it defines another directive. It should be
 #### 2.1.2 Arguments
 
 - `name` - the name of the new directive, as a token.
-- `arg_types` - an array values describing the required types for the arguments; the values required here are described in section 4.2.2.
+- `arg_types` - an array of type specifications for the arguments; see section 3.1.2.
 
 #### 2.1.3 Result
 
@@ -128,7 +128,7 @@ This directive imports directives that are exported from another module.
 
 #### 2.3.2 Arguments
 
-- `name` - the name of the module to import directives from, as a token. The order in which the filesystem is searched for modules is described in section 5.2.
+- `name` - the name of the module to import directives from, as a token. The order in which the filesystem is searched for modules is described in section 4.2.
 
 #### 2.3.3 Result
 
@@ -205,7 +205,7 @@ The result is always null.
 
 ### 2.9 `context`
 
-This directive evaluates a lambda, with no arguments, in the context of the calling scope; for example, this can be used to define additional directives in that scope.
+This directive evaluates a lambda, with no extra variables, in the context of the calling scope; for example, this can be used to define additional directives in that scope.
 
 #### 2.9.1 Usage
 
@@ -311,7 +311,7 @@ The result is the value of the register.
 
 ### 2.16 `token.combine`
 
-This directive combines an ordered series of tokens to create a new one. The result is deterministic, but platform-dependent; combining the equivalent set of tokens in the same order will produce an equivalent result.
+This directive combines an ordered series of tokens to create a new one, by joining them with periods (`.`).
 
 #### 2.16.1 Usage
 
@@ -380,12 +380,17 @@ This directive creates a new local variable.
 
 #### 2.20.1 Usage
 
-    @var <type> <name>
+    @var <type> <name> <value>
 
 #### 2.20.2 Arguments
 
 - `type` - the type specification for the new variable.
 - `name` - the name of the new variable, as a token. This must be unique across the current scope.
+- `value` - the initial value of the variable.
+
+#### 2.20.3 Result
+
+The result is a reference to the variable.
 
 ### 2.21 `defined`
 
@@ -403,24 +408,185 @@ This directive checks if a directive is defined.
 
 The result is true if the directive is defined, otherwise false.
 
-## 3 Creating Directives
+### 2.22 `set`
 
-## 4 Other Language Features
+This directive sets the value of a variable.
 
-### 4.1 Arrays
+#### 2.22.1 Usage
 
-### 4.2 Types
+    @set <name> <value>
 
-#### 4.2.1 Primitive Types
+#### 2.22.2 Arguments
 
-#### 4.2.2 Type Specifications
+- `name` - the name of the variable.
+- `value` - the new value of the variable.
 
-#### 4.2.3 Interoperation Types
+#### 2.22.3 Result
 
-## 5 Modules, Libraries, and Programs
+The result is the a reference to the variable.
 
-### 5.1 Submodules and Filesystem Structure
+### 2.23 `primitive`
 
-### 5.2 Search paths
+This directive produces the type information object for a given primitive type.
 
-## 6 Standard Library
+#### 2.23.1 Usage
+
+    @primitive <name>
+
+#### 2.23.2 Arugments
+
+- `name` - the name of the primitive type; see section 3.1.1.
+
+#### 2.23.3 Result
+
+The result is the type information object for the given primitive.
+
+### 2.24 `type.build`
+
+This directive creates a custom type.
+
+#### 2.24.1 Usage
+
+    @type.build <size>
+
+#### 2.24.2 Arguments
+
+- `size` - the size of the new type, in bytes, as a non-negative integer.
+
+#### 2.24.3 Result
+
+The result is a new type builder; see section 3.3.
+
+### 2.25 `type.extend`
+
+This directive creates a custom type that extends an existing type.
+
+#### 2.25.1 Usage
+
+    @type.extend <super_type> <addional_size>
+
+#### 2.25.2 Arguments
+
+- `super_type` - the type object for the type that this type is extending.
+- `additional_size` - the size, in bytes, that this type adds to the super type, as a non-negative integer.
+
+#### 2.25.3 Result
+
+The result is a new type builder; see section 3.3.
+
+### 2.26 `type.get`
+
+This directive gets the type of a value.
+
+#### 2.26.1 Usage
+
+    @type.get <value>
+
+#### 2.26.2 Arguments
+
+- `value` - the value of which to get the type.
+
+#### 2.26.3 Result
+
+The result is the type object of the value.
+
+### 2.27 `type.super`
+
+This directive gets the super type of a type.
+
+#### 2.27.1 Usage
+
+    @type.super <type>
+
+#### 2.27.2 Arguments
+
+- `type` - the type object of the type to get the super type of.
+
+#### 2.27.3 Result
+
+The result is the type object of the super type of the type, or null if the type does not extend another type.
+
+### 2.28 `type.size`
+
+This directive gets the size of instances of a type.
+
+#### 2.28.1 Usage
+
+    @type.size <type>
+
+#### 2.28.2 Arguments
+
+- `type` - the type object of the type to get the size of.
+
+#### 2.28.3 Result
+
+The result is the size of the type in bytes, as an integer.
+
+### 2.29 `true`
+
+This directive always evaluates to true.
+
+#### 2.29.1 Usage
+
+    @true
+
+#### 2.29.2 Result
+
+The result is always true.
+
+### 2.30 `false`
+
+This directive always evaluates to false.
+
+#### 2.30.1 Usage
+
+    @false
+
+#### 2.30.2 Result
+
+The result is always false.
+
+## 3 Language Features
+
+This section describes how to use various features of the Boa language.
+
+### 3.1 Types
+
+This section describes the function of the Boa type system.
+
+#### 3.1.1 Primitive Types
+
+Primitive types are types that are built into the Boa language itself; they are the only types not defined using the directives `type.build` or `type.extend`:
+
+Name|Tokenized Name|Size|Description
+----|--------------|----|-----------
+Array | `array` | Platform pointer size \* 2 | An arbitrary, but fixed, number of elements, which can be of any type.
+Boolean | `bool` | 1 | A value that is always either true or false.
+Integer | `int` | 8 | A 64-bit signed integer.
+Floating-point number | `float` | 8 | A double-precision (FP64) IEEE 754 floating point number.
+Lambda | `lambda` | Variable | A callable reference to a piece of code and relevant context; a closure.
+Null | `null` | 0 | The null value.
+Pointer | `pointer` | Platform pointer size | A raw memory address.
+Token | `token` | Platform pointer size | A series of numbers, letters, underscores, and period, which does not start with a number and neither begins nor ends with a period. Tokens cannot be constructed at runtime.
+Type builder | `builder` | Variable | A special object that aids in the creation and implementation of custom types.
+Type object | `type` | Platform pointer size | A special object that identifies a specific type.
+
+#### 3.1.2 Type Specifications
+
+A type specification is a lambda that can be used to check if a given value conforms to certain requirements.
+
+#### 3.1.3 Type Builders
+
+### 3.2 Arrays
+
+Arrays, as described in section 1.1, can be created by placing values in square brackets:
+
+    @var @primitive array foo [1 2 3]
+
+## 4 Modules, Libraries, and Programs
+
+### 4.1 Submodules and Filesystem Structure
+
+### 4.2 Search paths
+
+## 5 Standard Library
