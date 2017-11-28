@@ -1,0 +1,3 @@
+@expand stdio
+
+@print "Hello, world"
