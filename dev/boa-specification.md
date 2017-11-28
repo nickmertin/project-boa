@@ -81,6 +81,19 @@ In order for this syntax to work, all directives must take a defined, constant n
 
 It's possible that the `complex` directive takes 2 arguments, and the `sqrt` directive takes 1 argument, or that the `complex` directive takes 1 argument, and the `sqrt` directive takes 2 arguments. It's also possible that the `complex` directive does not take any argument, while the `sqrt` driective takes 2 arguments; in this case, `complex` would be evaluated first, followed by `sqrt`; the result of `sqrt` would be ignored.
 
+### 1.3 Comments
+
+Comments are sections of code that are ignored by the compiler/interpreter. There are two types of comments in Boa. Single-line comments start with a pound sign (`#`), and continue until a newline character. For example:
+
+    @print "Hello, world" # Prints to standard output
+
+There are also multiline comments, which start and end with backslash characters. For example:
+
+    \This code isn't working right now
+    @foo $bar\
+
+As can be seen in the above example, multiline comments can, logically, span multiple lines.
+
 ## 2 Builtins
 
 There are several directives, called builtins, which are built into the Boa language itself; they are provided by the compiler/interpreter, as opposed to library or user-defined directives, which are implemented in Boa.
@@ -564,20 +577,26 @@ Array | `array` | Platform pointer size \* 2 | An arbitrary, but fixed, number o
 Boolean | `bool` | 1 | A value that is always either true or false.
 Integer | `int` | 8 | A 64-bit signed integer.
 Floating-point number | `float` | 8 | A double-precision (FP64) IEEE 754 floating point number.
-Lambda | `lambda` | Variable | A callable reference to a piece of code and relevant context; a closure.
+Lambda | `lambda` | Varies | A callable reference to a piece of code and relevant context; a closure.
 Null | `null` | 0 | The null value.
 Pointer | `pointer` | Platform pointer size | A raw memory address.
+String | `string` | Platform pointer size \* 2 | A string of UTF-8 encoded Unicode characters.
 Token | `token` | Platform pointer size | A series of numbers, letters, underscores, and period, which does not start with a number and neither begins nor ends with a period. Tokens cannot be constructed at runtime.
-Type builder | `builder` | Variable | A special object that aids in the creation and implementation of custom types.
+Type builder | `builder` | Varies | A special object that aids in the creation and implementation of custom types.
 Type object | `type` | Platform pointer size | A special object that identifies a specific type.
+Variable reference | `var` | Platform pointer size | A special object that refers to a specific variable.
 
 #### 3.1.2 Type Specifications
 
-A type specification is a lambda that can be used to check if a given value conforms to certain requirements.
+A type specification is a lambda that can be used to check if a given value conforms to certain requirements. A variable, `value`, will be contain the value to check, and the return value's implicit Boolean conversion dictates whether or not the value is valid. For example, the following type specification identifies a non-negative integer:
+
+    { @return (@type.get $value == @primitive int && $value >= 0) }
 
 #### 3.1.3 Type Builders
 
-### 3.2 Arrays
+A type builder object allows for the creation of custom types.
+
+### 3.2 Arrays and Strings
 
 Arrays, as described in section 1.1, can be created by placing values in square brackets:
 
